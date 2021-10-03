@@ -1,0 +1,24 @@
+{
+    "name": "Appalachia.PostProcessing",
+    "rootNamespace": "",
+    "references": [
+        "GUID:a15d55b77c0da1b42af8372f5619c965",
+        "GUID:a19f071f3a1a79b48bffa624a937253c",
+        "GUID:25012465a8fdeed45bbf2ec5decdd531",
+        "GUID:cf75d8bea22d8fb469a2aa239cfc6930",
+        "GUID:bd2ccf18250dfd64eb1393211af84408",
+        "GUID:6b8c99229a4703f47b9e6e696c2e8d8d",
+        "GUID:aab7d97d30d7abe41b8a38190b985fb5",
+        "GUID:d60799ab2a985554ea1a39cd38695018",
+        "GUID:d8b63aba1907145bea998dd612889d6b"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

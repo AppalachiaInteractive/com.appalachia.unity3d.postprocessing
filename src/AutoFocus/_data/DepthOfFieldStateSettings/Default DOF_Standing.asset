@@ -1,0 +1,51 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b865defcb62445abe907dbe33c105ea, type: 3}
+  m_Name: Default DOF_Standing
+  m_EditorClassIdentifier: 
+  _niceName: 
+  _cachedName: 
+  id: 1
+  profileName: DepthOfFieldStateSettingCollection_20201019-052949674_Standing
+  state: 0
+  velocityThreshold: 3
+  velocityFadeRange: 1
+  defaultFocusDistance: 5
+  maxFocusDistance: 20
+  nearPlane:
+    kernelSize: 1
+    voteBias: 1
+    voteSampleKernelSize: 0.2
+    voteDepthTolerance: 0.02
+    adaptationTime: 0.1
+    adaptationSmoothing: 1
+    adaptationMaxSpeedTowards: 30
+    adaptationMaxSpeedAway: 10
+    apertureStationary: 40
+    apertureStationarySmoothing: 0.01
+    apertureChangeVelocityThreshold: 0.1
+    apertureMotion: 40
+    apertureMotionSmoothing: 0.1
+  farPlane:
+    kernelSize: 1
+    voteBias: 0.6
+    voteSampleKernelSize: 0.02
+    voteDepthTolerance: 0.02
+    adaptationTime: 2
+    adaptationSmoothing: 1
+    adaptationMaxSpeedTowards: 30
+    adaptationMaxSpeedAway: 10
+    apertureStationary: 8
+    apertureStationarySmoothing: 0.01
+    apertureChangeVelocityThreshold: 0.1
+    apertureMotion: 8
+    apertureMotionSmoothing: 0.2
