@@ -1,4 +1,4 @@
-namespace Appalachia.Core.PostProcessing.AutoFocus
+namespace Appalachia.PostProcessing.AutoFocus
 {
     public enum DepthOfFieldState
     {

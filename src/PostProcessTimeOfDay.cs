@@ -1,10 +1,10 @@
-using Appalachia.Core.Globals.Environment;
+using Appalachia.Globals.Environment;
 using Sirenix.OdinInspector;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.Serialization;
 
-namespace Appalachia.Core.PostProcessing
+namespace Appalachia.PostProcessing
 {
     [ExecuteAlways]
     public class PostProcessTimeOfDay : MonoBehaviour

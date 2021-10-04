@@ -8,7 +8,7 @@ using UnityEngine.Rendering.PostProcessing;
 
 #endif
 
-namespace Appalachia.Core.PostProcessing
+namespace Appalachia.PostProcessing
 {
     public static class PostProcessManager
     {

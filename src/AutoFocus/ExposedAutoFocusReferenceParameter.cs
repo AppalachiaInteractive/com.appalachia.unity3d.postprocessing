@@ -1,8 +1,8 @@
 using System;
-using Appalachia.Core.Volumes;
+using Appalachia.Core.Volumes.Parameters;
 using UnityEngine;
 
-namespace Appalachia.Core.PostProcessing.AutoFocus
+namespace Appalachia.PostProcessing.AutoFocus
 {
     [Serializable]
     public sealed class ExposedAutoFocusReferenceParameter : VolumeParameter<ExposedReference<DepthOfFieldAutoFocus>>

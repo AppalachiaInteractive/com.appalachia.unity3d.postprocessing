@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
+using Appalachia.Base.Scriptables;
 using Appalachia.Core.Comparisons;
-using Appalachia.Core.Editing.Attributes;
-using Appalachia.Core.Scriptables;
+using Appalachia.Editing.Attributes;
 using Appalachia.Utility.Enums;
 using Sirenix.OdinInspector;
 
-namespace Appalachia.Core.PostProcessing.AutoFocus
+namespace Appalachia.PostProcessing.AutoFocus
 {
     [Serializable]
     public class DepthOfFieldStateSettingCollection : SelfNamingSavingAndIdentifyingScriptableObject<DepthOfFieldStateSettingCollection>

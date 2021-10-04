@@ -1,11 +1,11 @@
 using System;
-using Appalachia.Core.Editing.Attributes;
-using Appalachia.Core.Scriptables;
+using Appalachia.Base.Scriptables;
+using Appalachia.Editing.Attributes;
 using Sirenix.OdinInspector;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace Appalachia.Core.PostProcessing.AutoFocus
+namespace Appalachia.PostProcessing.AutoFocus
 {
     [Serializable]
     public class DepthOfFieldStateSettings : SelfNamingSavingAndIdentifyingScriptableObject<DepthOfFieldStateSettings>

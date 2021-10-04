@@ -1,10 +1,10 @@
 using System;
-using Appalachia.Core.Editing.Attributes;
+using Appalachia.Editing.Attributes;
 using Sirenix.OdinInspector;
 using Unity.Mathematics;
 using UnityEngine.Rendering.PostProcessing;
 
-namespace Appalachia.Core.PostProcessing.AutoFocus
+namespace Appalachia.PostProcessing.AutoFocus
 {
     [Serializable]
     public class DepthOfFieldStatePlaneSettings

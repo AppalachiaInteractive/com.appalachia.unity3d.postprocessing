@@ -1,5 +1,5 @@
 using System;
-using Appalachia.Core.Editing.Attributes;
+using Appalachia.Editing.Attributes;
 using Sirenix.OdinInspector;
 using Unity.Profiling;
 using UnityEngine;
@@ -7,7 +7,7 @@ using UnityEngine.Rendering;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.Serialization;
 
-namespace Appalachia.Core.PostProcessing.AutoFocus
+namespace Appalachia.PostProcessing.AutoFocus
 {
     // ExecuteAlways needed to run OnDisable() after DoF made us allocate the buffer in edit mode.
     [DisallowMultipleComponent]
