@@ -8,7 +8,8 @@ using UnityEngine;
 namespace Appalachia.PostProcessing.AutoFocus
 {
     [Serializable]
-    public class DepthOfFieldStateSettings : SelfNamingSavingAndIdentifyingScriptableObject<DepthOfFieldStateSettings>
+    public class DepthOfFieldStateSettings : SelfNamingSavingAndIdentifyingScriptableObject<
+        DepthOfFieldStateSettings>
     {
         [SerializeField]
         [SmartLabel]
@@ -17,30 +18,36 @@ namespace Appalachia.PostProcessing.AutoFocus
         [BoxGroup("Movement")]
         [PropertyTooltip("Movement velocity at which these settings enable.")]
         [PropertyRange(0.1f, 6f)]
-        [HideIf(nameof(hideVelocityThreshold)), SmartLabel]
+        [HideIf(nameof(hideVelocityThreshold))]
+        [SmartLabel]
         public float velocityThreshold = 3.0f;
 
         [BoxGroup("Movement")]
         [PropertyTooltip("Movement velocity at which these settings enable.")]
         [PropertyRange(0.1f, 2f)]
-        [HideIf(nameof(hideVelocityThreshold)), SmartLabel]
+        [HideIf(nameof(hideVelocityThreshold))]
+        [SmartLabel]
         public float velocityFadeRange = 1.0f;
 
         [BoxGroup("Focus")]
         [PropertyTooltip("Sets the focus distance when nothing is explicitly targeted.")]
-        [PropertyRange(0.1f, 20.0f), SmartLabel]
+        [PropertyRange(0.1f, 20.0f)]
+        [SmartLabel]
         public float defaultFocusDistance = 10f;
 
         [BoxGroup("Focus")]
-        [PropertyRange(20.0f, 200.0f), SmartLabel]
+        [PropertyRange(20.0f, 200.0f)]
+        [SmartLabel]
         public float maxFocusDistance = 75.0f;
 
         [TabGroup("Planes", "Near Plane")]
-        [InlineProperty, HideLabel]
+        [InlineProperty]
+        [HideLabel]
         public DepthOfFieldStatePlaneSettings nearPlane;
 
         [TabGroup("Planes", "Far Plane")]
-        [InlineProperty, HideLabel]
+        [InlineProperty]
+        [HideLabel]
         public DepthOfFieldStatePlaneSettings farPlane;
 
         private bool hideVelocityThreshold => state == DepthOfFieldState.Standing;

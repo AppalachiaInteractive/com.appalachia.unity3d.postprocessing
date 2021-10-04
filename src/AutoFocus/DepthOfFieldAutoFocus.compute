@@ -56,16 +56,16 @@ float _ApertureMotionSmoothing;
 
 struct AutoFocusParams
 {
-	float currentFocusDistance;
-	float currentVelocity;
-	float targetFocusDistance;
-	float currentAperture;
+    float currentFocusDistance;
+    float currentVelocity;
+    float targetFocusDistance;
+    float currentAperture;
 };
 
 struct AutoFocusOutput
 {
-	float focusDistance;
-	float lensCoeff;
+    float focusDistance;
+    float lensCoeff;
 };
 
 RWStructuredBuffer<AutoFocusParams> _AutoFocusParams : register(u2);
@@ -76,9 +76,9 @@ RWStructuredBuffer<AutoFocusOutput> _AutoFocusOutput : register(u3);
 
 static const int _Samples = 2;
 
-static const float2 _DiskKernel[_Samples] = { 
-    float2(0, 0), 
-    float2(0.001, 0.001) 
+static const float2 _DiskKernel[_Samples] = {
+    float2(0, 0),
+    float2(0.001, 0.001)
 };
 
 #endif
@@ -276,12 +276,12 @@ float InterpolateSteady(
     float b,
     float time
 )
-{    
+{
     float step = clamp(time * (_DeltaTime / _FixedDeltaTime), 0, 1);
     step = min(time, step);
-    
+
     float result = lerp(a, b, step);
-    
+
     return result;
 }
 
@@ -290,28 +290,28 @@ float GetUpdatedVelocity(
     float targetFocusDistanceM,
     float currentVelocity
 )
-{	
-	float totalRequiredFocusUpdateM = targetFocusDistanceM - currentFocusDistanceM;
-	
-	bool negative = totalRequiredFocusUpdateM < 0;
-	
+{
+    float totalRequiredFocusUpdateM = targetFocusDistanceM - currentFocusDistanceM;
+
+    bool negative = totalRequiredFocusUpdateM < 0;
+
     float maxAllowedFocusVelocity = (negative ? _AdaptationMaxSpeedTowards : _AdaptationMaxSpeedAway);
-        
+
     float desiredTargetVelocity = totalRequiredFocusUpdateM;
-    
+
     float targetVelocity = clamp(desiredTargetVelocity, -maxAllowedFocusVelocity, maxAllowedFocusVelocity);
-                
+
     //float adaptationBlendRaw = currentVelocity / (max(.001, totalRequiredFocusUpdateM));
     //float adaptationBlend = saturate(abs(adaptationBlendRaw));    
     //float adaptationSmoothing = lerp(_AdaptationSmoothing, 1.0, adaptationBlend);    
     //float finalVelocity = lerp(currentVelocity, targetVelocity, adaptationSmoothing);    
-    
+
     float timeAdaptationScale = _DeltaTime / _AdaptationTime;
-    
+
     targetVelocity *= timeAdaptationScale;
-    
-    float finalVelocity = lerp(currentVelocity, targetVelocity, _AdaptationSmoothing);    
-    
+
+    float finalVelocity = lerp(currentVelocity, targetVelocity, _AdaptationSmoothing);
+
     return finalVelocity;
 }
 
@@ -322,13 +322,13 @@ void UpdateAperture(
 {
     float targetAperture = _ApertureStationary;
     float targetApertureSmoothing = _ApertureStationarySmoothing;
-    
+
     if (currentVelocity > _ApertureChangeVelocityThreshold)
     {
         targetAperture = _ApertureMotion;
         targetApertureSmoothing = _ApertureMotionSmoothing;
     }
-                        
+
     currentAperture = InterpolateSteady(currentAperture, targetAperture, targetApertureSmoothing);
 }
 
@@ -336,11 +336,11 @@ void UpdateDistance(
     float targetChangeInFocusM,
     inout float currentFocusDistanceM
 )
-{ 
+{
     float finalTargetFocusDistanceM = currentFocusDistanceM + targetChangeInFocusM;
-    	
-	currentFocusDistanceM = lerp(finalTargetFocusDistanceM, _DistanceOverride, _DistanceOverrideWeight);
-	currentFocusDistanceM = lerp(_DefaultFocusDistance, finalTargetFocusDistanceM, _Influence);
+
+    currentFocusDistanceM = lerp(finalTargetFocusDistanceM, _DistanceOverride, _DistanceOverrideWeight);
+    currentFocusDistanceM = lerp(_DefaultFocusDistance, finalTargetFocusDistanceM, _Influence);
 }
 
 
@@ -348,20 +348,20 @@ void UpdateDistance(
 // that looking at a close up object makes it gradually get in focus, while after switching back to
 // looking at distant objects the nearby instantly loses focus. Try making it more balanced?
 void UpdateFocus(
-    inout float currentFocusDistanceM, 
-    inout float targetFocusDistanceM, 
-    inout float currentVelocity, 
+    inout float currentFocusDistanceM,
+    inout float targetFocusDistanceM,
+    inout float currentVelocity,
     inout float currentAperture
 )
 {
-	currentFocusDistanceM = clamp(currentFocusDistanceM, 0, _MaxFocusDistance);
-	targetFocusDistanceM = clamp(targetFocusDistanceM, 0, _MaxFocusDistance);	
-    
+    currentFocusDistanceM = clamp(currentFocusDistanceM, 0, _MaxFocusDistance);
+    targetFocusDistanceM = clamp(targetFocusDistanceM, 0, _MaxFocusDistance);
+
     currentVelocity = GetUpdatedVelocity(currentFocusDistanceM, targetFocusDistanceM, currentVelocity);
-    
+
     float targetChangeInFocusM = currentVelocity;
     //float targetChangeInFocusM = currentVelocity * _DeltaTime;
-    
+
     UpdateAperture(currentVelocity, currentAperture);
     UpdateDistance(targetChangeInFocusM, currentFocusDistanceM);
 }
@@ -370,7 +370,7 @@ float Depth(
     float2 offset
 )
 {
-	return LinearEyeDepth(_CameraDepthTexture.SampleLevel(sampler_CameraDepthTexture, 0.5 + offset, 0).r);
+    return LinearEyeDepth(_CameraDepthTexture.SampleLevel(sampler_CameraDepthTexture, 0.5 + offset, 0).r);
 }
 
 void UpdatePlaneSettings(
@@ -378,7 +378,7 @@ void UpdatePlaneSettings(
 )
 {
     float time = targetFocusDistance / _MaxFocusDistance;
-    
+
     _VoteBias = lerp(_NearPlane_VoteBias, _FarPlane_VoteBias, time);
     _VoteSampleKernalSize = lerp(_NearPlane_VoteSampleKernalSize, _FarPlane_VoteSampleKernalSize, time);
     _VoteDepthTolerance = lerp(_NearPlane_VoteDepthTolerance, _FarPlane_VoteDepthTolerance, time);
@@ -398,24 +398,24 @@ float UpdateTargetFocusDistance(
 )
 {
     // Settings
-	uint sampleCount = _Samples;
-	float sampleKernelSize = _VoteSampleKernalSize;
-	float depthTolerance = _VoteDepthTolerance;
-	uint voteCount = _VoteBias*sampleCount;
-	
-#if !defined(AUTODOF_KERNEL_SMALL) && !defined(AUTODOF_KERNEL_MEDIUM) && \
+    uint sampleCount = _Samples;
+    float sampleKernelSize = _VoteSampleKernalSize;
+    float depthTolerance = _VoteDepthTolerance;
+    uint voteCount = _VoteBias * sampleCount;
+
+    #if !defined(AUTODOF_KERNEL_SMALL) && !defined(AUTODOF_KERNEL_MEDIUM) && \
     !defined(AUTODOF_KERNEL_LARGE) && !defined(AUTODOF_KERNEL_VERYLARGE)
 
-    float depths[_Samples] = { 
+    float depths[_Samples] = {
         -1, -1
-    };	
-    uint votes[_Samples] = { 
-         0,  0
-    };	
+    };
+    uint votes[_Samples] = {
+        0, 0
+    };
 
-#endif
+    #endif
 
-#if defined(AUTODOF_KERNEL_SMALL)
+    #if defined(AUTODOF_KERNEL_SMALL)
 	
     float depths[_Samples] = { 
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
@@ -424,9 +424,9 @@ float UpdateTargetFocusDistance(
          0,  0 , 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
     };
 
-#endif
+    #endif
 
-#if defined(AUTODOF_KERNEL_MEDIUM)
+    #if defined(AUTODOF_KERNEL_MEDIUM)
 
     float depths[_Samples] = { 
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,    
@@ -437,9 +437,9 @@ float UpdateTargetFocusDistance(
          0,  0,  0,  0,  0,  0
     };
 
-#endif
+    #endif
 
-#if defined(AUTODOF_KERNEL_LARGE)
+    #if defined(AUTODOF_KERNEL_LARGE)
 
     float depths[_Samples] = { 
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   
@@ -452,9 +452,9 @@ float UpdateTargetFocusDistance(
          0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
      };
 
-#endif
+    #endif
 
-#if defined(AUTODOF_KERNEL_VERYLARGE)
+    #if defined(AUTODOF_KERNEL_VERYLARGE)
 
     float depths[_Samples] = { 
         -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   
@@ -471,96 +471,96 @@ float UpdateTargetFocusDistance(
          0,  0,  0,  0,  0,  0,  0
      };
 
-#endif	
-	
-	// Init the first bucket with the current target depth
-	// Even though it might actually not be hit by any sample, and
-	// in a rare case cause the last sample to not get a bucket.
-	// No votes for now.	
-	depths[0] = targetFocusDistance;
-	
-	for (uint i = 0; i < sampleCount; i++)
-	{
-		float2 offset = _DiskKernel[i] * sampleKernelSize;
-		float depth = Depth(offset);
+    #endif
 
-		// TODO: Any depth that would result in effective focus at infinity should be
-		// clamped here into one value. Otherwise we're unnecesarily spreading them over buckets
-		// and decreasing their voting power. Need to figure out what that focus distance is from DoF params.
-		// depth = min(_FocusDistanceToInfinity, depth);
-		// Alternatively: bucket based on raw depth and only convert the output to linear.
+    // Init the first bucket with the current target depth
+    // Even though it might actually not be hit by any sample, and
+    // in a rare case cause the last sample to not get a bucket.
+    // No votes for now.	
+    depths[0] = targetFocusDistance;
 
-		// Find an empty bucket or add to a bucket that's close enough
-		for (uint j = 0; j < sampleCount; j++)
-		{
-			float bucket = depths[j];
-
-			// New bucket, claim it
-			if (bucket == -1)
-			{			
-				depths[j] = depth;
-				votes[j] +=1;
-				
-				break;
-			}
-
-			// Belongs to this bucket, upvote
-			if (abs(bucket - depth) < depthTolerance)
-			{
-				votes[j] += 1;
-				break;
-			}
-		}
-	}
-
-	// Find the bucket with the most votes
-	uint mostVotes = 0;
-	uint biggestBucket = 0;
-	for (uint k = 0; k < sampleCount; k++)
-	{
-		if (mostVotes < votes[k])
-		{
-			mostVotes = votes[k];
-			biggestBucket = k;
-		}
-	}
-	
-	// If the bucket with the most votes got considerably more votes (i.e. more by voteBias) than
-	// the current target focus distance, set it as the new target focus distance.
-	// Clamp the vote bias to the most votes value - if the buckets are too small, we can't be too sticky.
-	voteCount = min (mostVotes - 1, voteCount);
-	if (mostVotes > votes[0] + voteCount)
+    for (uint i = 0; i < sampleCount; i++)
     {
-		targetFocusDistance = depths[biggestBucket];
+        float2 offset = _DiskKernel[i] * sampleKernelSize;
+        float depth = Depth(offset);
+
+        // TODO: Any depth that would result in effective focus at infinity should be
+        // clamped here into one value. Otherwise we're unnecesarily spreading them over buckets
+        // and decreasing their voting power. Need to figure out what that focus distance is from DoF params.
+        // depth = min(_FocusDistanceToInfinity, depth);
+        // Alternatively: bucket based on raw depth and only convert the output to linear.
+
+        // Find an empty bucket or add to a bucket that's close enough
+        for (uint j = 0; j < sampleCount; j++)
+        {
+            float bucket = depths[j];
+
+            // New bucket, claim it
+            if (bucket == -1)
+            {
+                depths[j] = depth;
+                votes[j] += 1;
+
+                break;
+            }
+
+            // Belongs to this bucket, upvote
+            if (abs(bucket - depth) < depthTolerance)
+            {
+                votes[j] += 1;
+                break;
+            }
+        }
     }
-    
+
+    // Find the bucket with the most votes
+    uint mostVotes = 0;
+    uint biggestBucket = 0;
+    for (uint k = 0; k < sampleCount; k++)
+    {
+        if (mostVotes < votes[k])
+        {
+            mostVotes = votes[k];
+            biggestBucket = k;
+        }
+    }
+
+    // If the bucket with the most votes got considerably more votes (i.e. more by voteBias) than
+    // the current target focus distance, set it as the new target focus distance.
+    // Clamp the vote bias to the most votes value - if the buckets are too small, we can't be too sticky.
+    voteCount = min(mostVotes - 1, voteCount);
+    if (mostVotes > votes[0] + voteCount)
+    {
+        targetFocusDistance = depths[biggestBucket];
+    }
+
     return targetFocusDistance;
 }
 
 [numthreads(1,1,1)]
-void CSMain (uint3 id : SV_DispatchThreadID)
-{    
-	AutoFocusParams params = _AutoFocusParams[0];
-	
-	UpdatePlaneSettings(params.currentFocusDistance);
-	
-	params.targetFocusDistance = UpdateTargetFocusDistance(params.targetFocusDistance);
-    	
-	UpdateFocus(
-	    params.currentFocusDistance, 
-	    params.targetFocusDistance,
-	    params.currentVelocity, 
-	    params.currentAperture);
-		
-	_AutoFocusParams[0] = params;
-	
-	float currentApertureFilmHeightX2 = params.currentAperture * _FilmHeight * 2;
-	
-	float numer = _FocalLength * _FocalLength;
-	float denom = currentApertureFilmHeightX2 * (params.currentFocusDistance - _FocalLength);
-	
-	float lensCoeff = numer/denom;
-	
-	_AutoFocusOutput[0].lensCoeff = lensCoeff;	
-	_AutoFocusOutput[0].focusDistance = params.currentFocusDistance;
+void CSMain(uint3 id : SV_DispatchThreadID)
+{
+    AutoFocusParams params = _AutoFocusParams[0];
+
+    UpdatePlaneSettings(params.currentFocusDistance);
+
+    params.targetFocusDistance = UpdateTargetFocusDistance(params.targetFocusDistance);
+
+    UpdateFocus(
+        params.currentFocusDistance,
+        params.targetFocusDistance,
+        params.currentVelocity,
+        params.currentAperture);
+
+    _AutoFocusParams[0] = params;
+
+    float currentApertureFilmHeightX2 = params.currentAperture * _FilmHeight * 2;
+
+    float numer = _FocalLength * _FocalLength;
+    float denom = currentApertureFilmHeightX2 * (params.currentFocusDistance - _FocalLength);
+
+    float lensCoeff = numer / denom;
+
+    _AutoFocusOutput[0].lensCoeff = lensCoeff;
+    _AutoFocusOutput[0].focusDistance = params.currentFocusDistance;
 }

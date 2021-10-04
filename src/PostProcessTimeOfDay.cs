@@ -12,29 +12,53 @@ namespace Appalachia.PostProcessing
         public PostProcessVolume morning;
         public PostProcessVolume daytime;
         public PostProcessVolume evening;
-        [FormerlySerializedAs("nightime")] public PostProcessVolume nighttime;
 
-        [BoxGroup("Time"), ShowInInspector, ReadOnly, PropertyRange(0f, 1.0f)]
+        [FormerlySerializedAs("nightime")]
+        public PostProcessVolume nighttime;
+
+        [BoxGroup("Time")]
+        [ShowInInspector]
+        [ReadOnly]
+        [PropertyRange(0f, 1.0f)]
         public float solarTime => ENVIRONMENT.solarTime;
-        [BoxGroup("Time"), ShowInInspector, ReadOnly, PropertyRange(0f, 1.0f)]
+
+        [BoxGroup("Time")]
+        [ShowInInspector]
+        [ReadOnly]
+        [PropertyRange(0f, 1.0f)]
         public float lunarTime => ENVIRONMENT.lunarTime;
-        
-        [BoxGroup("Strengths"), ShowInInspector, ReadOnly, PropertyRange(0f, 1.0f)]
+
+        [BoxGroup("Strengths")]
+        [ShowInInspector]
+        [ReadOnly]
+        [PropertyRange(0f, 1.0f)]
         public float morningStrength => morning.weight;
-        [BoxGroup("Strengths"), ShowInInspector, ReadOnly, PropertyRange(0f, 1.0f)]
+
+        [BoxGroup("Strengths")]
+        [ShowInInspector]
+        [ReadOnly]
+        [PropertyRange(0f, 1.0f)]
         public float daytimeStrength => daytime.weight;
-        [BoxGroup("Strengths"), ShowInInspector, ReadOnly, PropertyRange(0f, 1.0f)]
+
+        [BoxGroup("Strengths")]
+        [ShowInInspector]
+        [ReadOnly]
+        [PropertyRange(0f, 1.0f)]
         public float eveningStrength => evening.weight;
-        [BoxGroup("Strengths"), ShowInInspector, ReadOnly, PropertyRange(0f, 1.0f)]
+
+        [BoxGroup("Strengths")]
+        [ShowInInspector]
+        [ReadOnly]
+        [PropertyRange(0f, 1.0f)]
         public float nighttimeStrength => nighttime.weight;
-        
+
         private void Update()
         {
             if (!EnviroTimeManager.Valid)
             {
                 return;
             }
-            
+
             var isMorning = EnviroTimeManager.Morning();
 
             var twilight = isMorning ? morning : evening;
@@ -54,7 +78,7 @@ namespace Appalachia.PostProcessing
             {
                 daytime.weight = 0.0f;
 
-                var blend = (solarTime * 2.0f);
+                var blend = solarTime * 2.0f;
                 nighttime.weight = 1.0f - blend;
                 twilight.weight = blend;
             }

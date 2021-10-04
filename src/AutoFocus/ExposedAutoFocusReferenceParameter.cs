@@ -5,7 +5,9 @@ using UnityEngine;
 namespace Appalachia.PostProcessing.AutoFocus
 {
     [Serializable]
-    public sealed class ExposedAutoFocusReferenceParameter : VolumeParameter<ExposedReference<DepthOfFieldAutoFocus>>
+    public sealed class
+        ExposedAutoFocusReferenceParameter : VolumeParameter<
+            ExposedReference<DepthOfFieldAutoFocus>>
     {
         public ExposedAutoFocusReferenceParameter(
             ExposedReference<DepthOfFieldAutoFocus> value,

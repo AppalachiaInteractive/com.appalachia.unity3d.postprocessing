@@ -4,6 +4,6 @@ namespace Appalachia.PostProcessing.AutoFocus
     {
         Standing = 0,
         Walking = 10,
-        Running = 50,
+        Running = 50
     }
 }

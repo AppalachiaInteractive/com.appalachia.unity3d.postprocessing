@@ -9,31 +9,28 @@ using Sirenix.OdinInspector;
 namespace Appalachia.PostProcessing.AutoFocus
 {
     [Serializable]
-    public class DepthOfFieldStateSettingCollection : SelfNamingSavingAndIdentifyingScriptableObject<DepthOfFieldStateSettingCollection>
+    public class DepthOfFieldStateSettingCollection : SelfNamingSavingAndIdentifyingScriptableObject
+        <DepthOfFieldStateSettingCollection>
     {
         [FoldoutGroup("Defaults")]
-        [PropertyRange(0.01f, 1.0f), SmartLabel]
+        [PropertyRange(0.01f, 1.0f)]
+        [SmartLabel]
         public float velocitySmoothing = .2f;
-        
-        [FoldoutGroup("Defaults")]
-        [PropertyRange(0.1f, 50.0f), SmartLabel]
-        public float focusDistance = 15f;
-        
-        [FoldoutGroup("Defaults")]
-        [PropertyRange(0.0f, 128.0f), SmartLabel]
-        public float aperture = 16f;
-        
-        [InlineEditor]
-        public List<DepthOfFieldStateSettings> settings;
 
-        [Button]
-        private void Refresh()
-        {
-            OnEnable();
-        }
+        [FoldoutGroup("Defaults")]
+        [PropertyRange(0.1f, 50.0f)]
+        [SmartLabel]
+        public float focusDistance = 15f;
+
+        [FoldoutGroup("Defaults")]
+        [PropertyRange(0.0f, 128.0f)]
+        [SmartLabel]
+        public float aperture = 16f;
+
+        [InlineEditor] public List<DepthOfFieldStateSettings> settings;
 
         private IComparer<DepthOfFieldStateSettings> _comparison;
-        
+
         protected override void OnEnable()
         {
             var values = EnumValueManager.GetAllValues<DepthOfFieldState>();
@@ -47,7 +44,7 @@ namespace Appalachia.PostProcessing.AutoFocus
             while (settings.Count < values.Length)
             {
                 var targetname = $"{name}_{values[settings.Count]}";
-                
+
                 settings.Add(DepthOfFieldStateSettings.LoadOrCreateNew(targetname));
                 SetDirty();
             }
@@ -60,11 +57,14 @@ namespace Appalachia.PostProcessing.AutoFocus
 
             if (_comparison == null)
             {
-                _comparison = new ComparisonWrapper<DepthOfFieldStateSettings>((a, b) => a.state.CompareTo(b.state));
+                _comparison =
+                    new ComparisonWrapper<DepthOfFieldStateSettings>(
+                        (a, b) => a.state.CompareTo(b.state)
+                    );
             }
 
             settings.Sort(_comparison);
-            
+
             for (var i = 0; i < settings.Count; i++)
             {
                 var targetName = $"{name}_{values[i]}";
@@ -92,7 +92,11 @@ namespace Appalachia.PostProcessing.AutoFocus
                 }
             }
         }
-        
-        
+
+        [Button]
+        private void Refresh()
+        {
+            OnEnable();
+        }
     }
 }
