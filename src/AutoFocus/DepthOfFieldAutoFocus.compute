@@ -1,0 +1,566 @@
+﻿#pragma kernel CSMain
+
+#include "Packages/com.appalachia.unity3d.unity.postprocessing/src/PostProcessing/Shaders/Builtins/DepthOfField.hlsl"
+
+float _Influence;
+
+float _FocalLength;
+float _FilmHeight;
+
+float _DeltaTime;
+float _FixedDeltaTime;
+
+float _DefaultFocusDistance;
+float _MaxFocusDistance;
+float _DistanceOverride;
+float _DistanceOverrideWeight;
+
+float _NearPlane_VoteBias;
+float _NearPlane_VoteSampleKernalSize;
+float _NearPlane_VoteDepthTolerance;
+float _NearPlane_AdaptationTime;
+float _NearPlane_AdaptationMaxSpeedTowards;
+float _NearPlane_AdaptationMaxSpeedAway;
+float _NearPlane_AdaptationSmoothing;
+float _NearPlane_ApertureStationary;
+float _NearPlane_ApertureStationarySmoothing;
+float _NearPlane_ApertureChangeVelocityThreshold;
+float _NearPlane_ApertureMotion;
+float _NearPlane_ApertureMotionSmoothing;
+
+float _FarPlane_VoteBias;
+float _FarPlane_VoteSampleKernalSize;
+float _FarPlane_VoteDepthTolerance;
+float _FarPlane_AdaptationTime;
+float _FarPlane_AdaptationMaxSpeedTowards;
+float _FarPlane_AdaptationMaxSpeedAway;
+float _FarPlane_AdaptationSmoothing;
+float _FarPlane_ApertureStationary;
+float _FarPlane_ApertureStationarySmoothing;
+float _FarPlane_ApertureChangeVelocityThreshold;
+float _FarPlane_ApertureMotion;
+float _FarPlane_ApertureMotionSmoothing;
+
+float _VoteBias;
+float _VoteSampleKernalSize;
+float _VoteDepthTolerance;
+float _AdaptationTime;
+float _AdaptationMaxSpeedTowards;
+float _AdaptationMaxSpeedAway;
+float _AdaptationSmoothing;
+float _ApertureStationary;
+float _ApertureStationarySmoothing;
+float _ApertureChangeVelocityThreshold;
+float _ApertureMotion;
+float _ApertureMotionSmoothing;
+
+struct AutoFocusParams
+{
+	float currentFocusDistance;
+	float currentVelocity;
+	float targetFocusDistance;
+	float currentAperture;
+};
+
+struct AutoFocusOutput
+{
+	float focusDistance;
+	float lensCoeff;
+};
+
+RWStructuredBuffer<AutoFocusParams> _AutoFocusParams : register(u2);
+RWStructuredBuffer<AutoFocusOutput> _AutoFocusOutput : register(u3);
+
+#if !defined(AUTODOF_KERNEL_SMALL) && !defined(AUTODOF_KERNEL_MEDIUM) && \
+    !defined(AUTODOF_KERNEL_LARGE) && !defined(AUTODOF_KERNEL_VERYLARGE)
+
+static const int _Samples = 2;
+
+static const float2 _DiskKernel[_Samples] = { 
+    float2(0, 0), 
+    float2(0.001, 0.001) 
+};
+
+#endif
+
+#if defined(AUTODOF_KERNEL_SMALL)
+	
+static const int _Samples = 16;
+
+static const float2 _DiskKernel[_Samples] = {
+    float2(0,0),
+    float2(0.54545456,0),
+    float2(0.16855472,0.5187581),
+    float2(-0.44128203,0.3206101),
+    float2(-0.44128197,-0.3206102),
+    float2(0.1685548,-0.5187581),
+    float2(1,0),
+    float2(0.809017,0.58778524),
+    float2(0.30901697,0.95105654),
+    float2(-0.30901703,0.9510565),
+    float2(-0.80901706,0.5877852),
+    float2(-1,0),
+    float2(-0.80901694,-0.58778536),
+    float2(-0.30901664,-0.9510566),
+    float2(0.30901712,-0.9510565),
+    float2(0.80901694,-0.5877853),
+};
+
+#endif
+
+#if defined(AUTODOF_KERNEL_MEDIUM)
+
+static const int _Samples = 22;
+
+static const float2 _DiskKernel[_Samples] = {
+    float2(0,0),
+    float2(0.53333336,0),
+    float2(0.3325279,0.4169768),
+    float2(-0.11867785,0.5199616),
+    float2(-0.48051673,0.2314047),
+    float2(-0.48051673,-0.23140468),
+    float2(-0.11867763,-0.51996166),
+    float2(0.33252785,-0.4169769),
+    float2(1,0),
+    float2(0.90096885,0.43388376),
+    float2(0.6234898,0.7818315),
+    float2(0.22252098,0.9749279),
+    float2(-0.22252095,0.9749279),
+    float2(-0.62349,0.7818314),
+    float2(-0.90096885,0.43388382),
+    float2(-1,0),
+    float2(-0.90096885,-0.43388376),
+    float2(-0.6234896,-0.7818316),
+    float2(-0.22252055,-0.974928),
+    float2(0.2225215,-0.9749278),
+    float2(0.6234897,-0.7818316),
+    float2(0.90096885,-0.43388376),
+};
+
+#endif
+
+#if defined(AUTODOF_KERNEL_LARGE)
+
+static const int _Samples = 43;
+ 
+ static const float2 _DiskKernel[_Samples] = {
+    float2(0,0),
+    float2(0.36363637,0),
+    float2(0.22672357,0.28430238),
+    float2(-0.08091671,0.35451925),
+    float2(-0.32762504,0.15777594),
+    float2(-0.32762504,-0.15777591),
+    float2(-0.08091656,-0.35451928),
+    float2(0.22672352,-0.2843024),
+    float2(0.6818182,0),
+    float2(0.614297,0.29582983),
+    float2(0.42510667,0.5330669),
+    float2(0.15171885,0.6647236),
+    float2(-0.15171883,0.6647236),
+    float2(-0.4251068,0.53306687),
+    float2(-0.614297,0.29582986),
+    float2(-0.6818182,0),
+    float2(-0.614297,-0.29582983),
+    float2(-0.42510656,-0.53306705),
+    float2(-0.15171856,-0.66472363),
+    float2(0.1517192,-0.6647235),
+    float2(0.4251066,-0.53306705),
+    float2(0.614297,-0.29582983),
+    float2(1,0),
+    float2(0.9555728,0.2947552),
+    float2(0.82623875,0.5633201),
+    float2(0.6234898,0.7818315),
+    float2(0.36534098,0.93087375),
+    float2(0.07473,0.9972038),
+    float2(-0.22252095,0.9749279),
+    float2(-0.50000006,0.8660254),
+    float2(-0.73305196,0.6801727),
+    float2(-0.90096885,0.43388382),
+    float2(-0.98883086,0.14904208),
+    float2(-0.9888308,-0.14904249),
+    float2(-0.90096885,-0.43388376),
+    float2(-0.73305184,-0.6801728),
+    float2(-0.4999999,-0.86602545),
+    float2(-0.222521,-0.9749279),
+    float2(0.07473029,-0.99720377),
+    float2(0.36534148,-0.9308736),
+    float2(0.6234897,-0.7818316),
+    float2(0.8262388,-0.56332),
+    float2(0.9555729,-0.29475483),
+};
+
+#endif
+
+#if defined(AUTODOF_KERNEL_VERYLARGE)
+
+static const int _Samples = 71;
+ 
+static const float2 _DiskKernel[_Samples] = {
+    float2(0,0),
+    float2(0.2758621,0),
+    float2(0.1719972,0.21567768),
+    float2(-0.061385095,0.26894566),
+    float2(-0.24854316,0.1196921),
+    float2(-0.24854316,-0.11969208),
+    float2(-0.061384983,-0.2689457),
+    float2(0.17199717,-0.21567771),
+    float2(0.51724136,0),
+    float2(0.46601835,0.22442262),
+    float2(0.32249472,0.40439558),
+    float2(0.11509705,0.50427306),
+    float2(-0.11509704,0.50427306),
+    float2(-0.3224948,0.40439552),
+    float2(-0.46601835,0.22442265),
+    float2(-0.51724136,0),
+    float2(-0.46601835,-0.22442262),
+    float2(-0.32249463,-0.40439564),
+    float2(-0.11509683,-0.5042731),
+    float2(0.11509732,-0.504273),
+    float2(0.32249466,-0.40439564),
+    float2(0.46601835,-0.22442262),
+    float2(0.7586207,0),
+    float2(0.7249173,0.22360738),
+    float2(0.6268018,0.4273463),
+    float2(0.47299224,0.59311354),
+    float2(0.27715522,0.7061801),
+    float2(0.056691725,0.75649947),
+    float2(-0.168809,0.7396005),
+    float2(-0.3793104,0.65698475),
+    float2(-0.55610836,0.51599306),
+    float2(-0.6834936,0.32915324),
+    float2(-0.7501475,0.113066405),
+    float2(-0.7501475,-0.11306671),
+    float2(-0.6834936,-0.32915318),
+    float2(-0.5561083,-0.5159932),
+    float2(-0.37931028,-0.6569848),
+    float2(-0.16880904,-0.7396005),
+    float2(0.056691945,-0.7564994),
+    float2(0.2771556,-0.7061799),
+    float2(0.47299215,-0.59311366),
+    float2(0.62680185,-0.4273462),
+    float2(0.72491735,-0.22360711),
+    float2(1,0),
+    float2(0.9749279,0.22252093),
+    float2(0.90096885,0.43388376),
+    float2(0.7818315,0.6234898),
+    float2(0.6234898,0.7818315),
+    float2(0.43388364,0.9009689),
+    float2(0.22252098,0.9749279),
+    float2(0,1),
+    float2(-0.22252095,0.9749279),
+    float2(-0.43388385,0.90096885),
+    float2(-0.62349,0.7818314),
+    float2(-0.7818317,0.62348956),
+    float2(-0.90096885,0.43388382),
+    float2(-0.9749279,0.22252093),
+    float2(-1,0),
+    float2(-0.9749279,-0.22252087),
+    float2(-0.90096885,-0.43388376),
+    float2(-0.7818314,-0.6234899),
+    float2(-0.6234896,-0.7818316),
+    float2(-0.43388346,-0.900969),
+    float2(-0.22252055,-0.974928),
+    float2(0,-1),
+    float2(0.2225215,-0.9749278),
+    float2(0.4338835,-0.90096897),
+    float2(0.6234897,-0.7818316),
+    float2(0.78183144,-0.62348986),
+    float2(0.90096885,-0.43388376),
+    float2(0.9749279,-0.22252086),
+};
+
+#endif
+
+float InterpolateSteady(
+    float a,
+    float b,
+    float time
+)
+{    
+    float step = clamp(time * (_DeltaTime / _FixedDeltaTime), 0, 1);
+    step = min(time, step);
+    
+    float result = lerp(a, b, step);
+    
+    return result;
+}
+
+float GetUpdatedVelocity(
+    float currentFocusDistanceM,
+    float targetFocusDistanceM,
+    float currentVelocity
+)
+{	
+	float totalRequiredFocusUpdateM = targetFocusDistanceM - currentFocusDistanceM;
+	
+	bool negative = totalRequiredFocusUpdateM < 0;
+	
+    float maxAllowedFocusVelocity = (negative ? _AdaptationMaxSpeedTowards : _AdaptationMaxSpeedAway);
+        
+    float desiredTargetVelocity = totalRequiredFocusUpdateM;
+    
+    float targetVelocity = clamp(desiredTargetVelocity, -maxAllowedFocusVelocity, maxAllowedFocusVelocity);
+                
+    //float adaptationBlendRaw = currentVelocity / (max(.001, totalRequiredFocusUpdateM));
+    //float adaptationBlend = saturate(abs(adaptationBlendRaw));    
+    //float adaptationSmoothing = lerp(_AdaptationSmoothing, 1.0, adaptationBlend);    
+    //float finalVelocity = lerp(currentVelocity, targetVelocity, adaptationSmoothing);    
+    
+    float timeAdaptationScale = _DeltaTime / _AdaptationTime;
+    
+    targetVelocity *= timeAdaptationScale;
+    
+    float finalVelocity = lerp(currentVelocity, targetVelocity, _AdaptationSmoothing);    
+    
+    return finalVelocity;
+}
+
+void UpdateAperture(
+    float currentVelocity,
+    inout float currentAperture
+)
+{
+    float targetAperture = _ApertureStationary;
+    float targetApertureSmoothing = _ApertureStationarySmoothing;
+    
+    if (currentVelocity > _ApertureChangeVelocityThreshold)
+    {
+        targetAperture = _ApertureMotion;
+        targetApertureSmoothing = _ApertureMotionSmoothing;
+    }
+                        
+    currentAperture = InterpolateSteady(currentAperture, targetAperture, targetApertureSmoothing);
+}
+
+void UpdateDistance(
+    float targetChangeInFocusM,
+    inout float currentFocusDistanceM
+)
+{ 
+    float finalTargetFocusDistanceM = currentFocusDistanceM + targetChangeInFocusM;
+    	
+	currentFocusDistanceM = lerp(finalTargetFocusDistanceM, _DistanceOverride, _DistanceOverrideWeight);
+	currentFocusDistanceM = lerp(_DefaultFocusDistance, finalTargetFocusDistanceM, _Influence);
+}
+
+
+// TODO: The beginning is quick, while the end is slow. This (I think, unverified) creates an effect
+// that looking at a close up object makes it gradually get in focus, while after switching back to
+// looking at distant objects the nearby instantly loses focus. Try making it more balanced?
+void UpdateFocus(
+    inout float currentFocusDistanceM, 
+    inout float targetFocusDistanceM, 
+    inout float currentVelocity, 
+    inout float currentAperture
+)
+{
+	currentFocusDistanceM = clamp(currentFocusDistanceM, 0, _MaxFocusDistance);
+	targetFocusDistanceM = clamp(targetFocusDistanceM, 0, _MaxFocusDistance);	
+    
+    currentVelocity = GetUpdatedVelocity(currentFocusDistanceM, targetFocusDistanceM, currentVelocity);
+    
+    float targetChangeInFocusM = currentVelocity;
+    //float targetChangeInFocusM = currentVelocity * _DeltaTime;
+    
+    UpdateAperture(currentVelocity, currentAperture);
+    UpdateDistance(targetChangeInFocusM, currentFocusDistanceM);
+}
+
+float Depth(
+    float2 offset
+)
+{
+	return LinearEyeDepth(_CameraDepthTexture.SampleLevel(sampler_CameraDepthTexture, 0.5 + offset, 0).r);
+}
+
+void UpdatePlaneSettings(
+    float targetFocusDistance
+)
+{
+    float time = targetFocusDistance / _MaxFocusDistance;
+    
+    _VoteBias = lerp(_NearPlane_VoteBias, _FarPlane_VoteBias, time);
+    _VoteSampleKernalSize = lerp(_NearPlane_VoteSampleKernalSize, _FarPlane_VoteSampleKernalSize, time);
+    _VoteDepthTolerance = lerp(_NearPlane_VoteDepthTolerance, _FarPlane_VoteDepthTolerance, time);
+    _AdaptationTime = lerp(_NearPlane_AdaptationTime, _FarPlane_AdaptationTime, time);
+    _AdaptationMaxSpeedTowards = lerp(_NearPlane_AdaptationMaxSpeedTowards, _FarPlane_AdaptationMaxSpeedTowards, time);
+    _AdaptationMaxSpeedAway = lerp(_NearPlane_AdaptationMaxSpeedAway, _FarPlane_AdaptationMaxSpeedAway, time);
+    _AdaptationSmoothing = lerp(_NearPlane_AdaptationSmoothing, _FarPlane_AdaptationSmoothing, time);
+    _ApertureStationary = lerp(_NearPlane_ApertureStationary, _FarPlane_ApertureStationary, time);
+    _ApertureStationarySmoothing = lerp(_NearPlane_ApertureStationarySmoothing, _FarPlane_ApertureStationarySmoothing, time);
+    _ApertureChangeVelocityThreshold = lerp(_NearPlane_ApertureChangeVelocityThreshold, _FarPlane_ApertureChangeVelocityThreshold, time);
+    _ApertureMotion = lerp(_NearPlane_ApertureMotion, _FarPlane_ApertureMotion, time);
+    _ApertureMotionSmoothing = lerp(_NearPlane_ApertureMotionSmoothing, _FarPlane_ApertureMotionSmoothing, time);
+}
+
+float UpdateTargetFocusDistance(
+    float targetFocusDistance
+)
+{
+    // Settings
+	uint sampleCount = _Samples;
+	float sampleKernelSize = _VoteSampleKernalSize;
+	float depthTolerance = _VoteDepthTolerance;
+	uint voteCount = _VoteBias*sampleCount;
+	
+#if !defined(AUTODOF_KERNEL_SMALL) && !defined(AUTODOF_KERNEL_MEDIUM) && \
+    !defined(AUTODOF_KERNEL_LARGE) && !defined(AUTODOF_KERNEL_VERYLARGE)
+
+    float depths[_Samples] = { 
+        -1, -1
+    };	
+    uint votes[_Samples] = { 
+         0,  0
+    };	
+
+#endif
+
+#if defined(AUTODOF_KERNEL_SMALL)
+	
+    float depths[_Samples] = { 
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+    };	
+    uint votes[_Samples] =   {  
+         0,  0 , 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+    };
+
+#endif
+
+#if defined(AUTODOF_KERNEL_MEDIUM)
+
+    float depths[_Samples] = { 
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,    
+        -1, -1, -1, -1, -1, -1
+    };	
+    uint votes[_Samples] =   { 
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0
+    };
+
+#endif
+
+#if defined(AUTODOF_KERNEL_LARGE)
+
+    float depths[_Samples] = { 
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
+    };	
+    uint votes[_Samples] =   { 
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
+     };
+
+#endif
+
+#if defined(AUTODOF_KERNEL_VERYLARGE)
+
+    float depths[_Samples] = { 
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   
+        -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,   
+        -1, -1, -1, -1, -1, -1, -1, 
+    };	
+    uint votes[_Samples] =   { 
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+         0,  0,  0,  0,  0,  0,  0
+     };
+
+#endif	
+	
+	// Init the first bucket with the current target depth
+	// Even though it might actually not be hit by any sample, and
+	// in a rare case cause the last sample to not get a bucket.
+	// No votes for now.	
+	depths[0] = targetFocusDistance;
+	
+	for (uint i = 0; i < sampleCount; i++)
+	{
+		float2 offset = _DiskKernel[i] * sampleKernelSize;
+		float depth = Depth(offset);
+
+		// TODO: Any depth that would result in effective focus at infinity should be
+		// clamped here into one value. Otherwise we're unnecesarily spreading them over buckets
+		// and decreasing their voting power. Need to figure out what that focus distance is from DoF params.
+		// depth = min(_FocusDistanceToInfinity, depth);
+		// Alternatively: bucket based on raw depth and only convert the output to linear.
+
+		// Find an empty bucket or add to a bucket that's close enough
+		for (uint j = 0; j < sampleCount; j++)
+		{
+			float bucket = depths[j];
+
+			// New bucket, claim it
+			if (bucket == -1)
+			{			
+				depths[j] = depth;
+				votes[j] +=1;
+				
+				break;
+			}
+
+			// Belongs to this bucket, upvote
+			if (abs(bucket - depth) < depthTolerance)
+			{
+				votes[j] += 1;
+				break;
+			}
+		}
+	}
+
+	// Find the bucket with the most votes
+	uint mostVotes = 0;
+	uint biggestBucket = 0;
+	for (uint k = 0; k < sampleCount; k++)
+	{
+		if (mostVotes < votes[k])
+		{
+			mostVotes = votes[k];
+			biggestBucket = k;
+		}
+	}
+	
+	// If the bucket with the most votes got considerably more votes (i.e. more by voteBias) than
+	// the current target focus distance, set it as the new target focus distance.
+	// Clamp the vote bias to the most votes value - if the buckets are too small, we can't be too sticky.
+	voteCount = min (mostVotes - 1, voteCount);
+	if (mostVotes > votes[0] + voteCount)
+    {
+		targetFocusDistance = depths[biggestBucket];
+    }
+    
+    return targetFocusDistance;
+}
+
+[numthreads(1,1,1)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{    
+	AutoFocusParams params = _AutoFocusParams[0];
+	
+	UpdatePlaneSettings(params.currentFocusDistance);
+	
+	params.targetFocusDistance = UpdateTargetFocusDistance(params.targetFocusDistance);
+    	
+	UpdateFocus(
+	    params.currentFocusDistance, 
+	    params.targetFocusDistance,
+	    params.currentVelocity, 
+	    params.currentAperture);
+		
+	_AutoFocusParams[0] = params;
+	
+	float currentApertureFilmHeightX2 = params.currentAperture * _FilmHeight * 2;
+	
+	float numer = _FocalLength * _FocalLength;
+	float denom = currentApertureFilmHeightX2 * (params.currentFocusDistance - _FocalLength);
+	
+	float lensCoeff = numer/denom;
+	
+	_AutoFocusOutput[0].lensCoeff = lensCoeff;	
+	_AutoFocusOutput[0].focusDistance = params.currentFocusDistance;
+}
